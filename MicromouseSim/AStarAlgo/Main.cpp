@@ -1,7 +1,9 @@
 #include <iostream>
 #include <vector>
-#include <list>
+#include <queue>
 #include <cmath>
+#include <set>
+#include <algorithm>
 using namespace std;
 #include "API.h"
 #define MAZE_SIZE 16
@@ -41,24 +43,6 @@ public:
             default: return false;
         }
     }
-
-    void setWall(int direction) {
-        switch (direction) {
-            case 0: wallUp = true; break;
-            case 1: wallRight = true; break;
-            case 2: wallDown = true; break;
-            case 3: wallLeft = true; break;
-        }
-    }
-
-    void removeWall(int direction) {
-        switch (direction) {
-            case 0: wallUp = false; break;
-            case 1: wallRight = false; break;
-            case 2: wallDown = false; break;
-            case 3: wallLeft = false; break;
-        }
-    }
 };
 
 // Robot variables
@@ -69,152 +53,92 @@ int robotDirection = 0;  // Direction the robot is facing (0 = Up, 1 = Right, 2 
 vector<vector<Cell>> maze(MAZE_SIZE, vector<Cell>(MAZE_SIZE));
 
 // Log function for debugging and tracking movements
-void log(const std::string& text) {
-    std::cerr << text << std::endl;
+void log(const string& text) {
+    cerr << text << endl;
 }
-
-// Explore the maze based on the robot's current position and sensor data
 void exploreMaze() {
+    // Check the front wall
     if (API::wallFront()) {
-        if (robotDirection == 0) maze[robotX][robotY].wallUp = true;
-        else if (robotDirection == 1) maze[robotX][robotY].wallRight = true;
-        else if (robotDirection == 2) maze[robotX][robotY].wallDown = true;
-        else if (robotDirection == 3) maze[robotX][robotY].wallLeft = true;
+        switch (robotDirection) {
+            case 0: maze[robotX][robotY].wallUp = true; break;    // Facing Up
+            case 1: maze[robotX][robotY].wallRight = true; break; // Facing Right
+            case 2: maze[robotX][robotY].wallDown = true; break;  // Facing Down
+            case 3: maze[robotX][robotY].wallLeft = true; break;  // Facing Left
+        }
     }
 
+    // Check the right wall
     if (API::wallRight()) {
-        if (robotDirection == 0) maze[robotX][robotY].wallRight = true;
-        else if (robotDirection == 1) maze[robotX][robotY].wallDown = true;
-        else if (robotDirection == 2) maze[robotX][robotY].wallLeft = true;
-        else if (robotDirection == 3) maze[robotX][robotY].wallUp = true;
+        switch (robotDirection) {
+            case 0: maze[robotX][robotY].wallRight = true; break; // Facing Up
+            case 1: maze[robotX][robotY].wallDown = true; break;  // Facing Right
+            case 2: maze[robotX][robotY].wallLeft = true; break;  // Facing Down
+            case 3: maze[robotX][robotY].wallUp = true; break;    // Facing Left
+        }
     }
 
+    // Check the left wall
     if (API::wallLeft()) {
-        if (robotDirection == 0) maze[robotX][robotY].wallLeft = true;
-        else if (robotDirection == 1) maze[robotX][robotY].wallUp = true;
-        else if (robotDirection == 2) maze[robotX][robotY].wallRight = true;
-        else if (robotDirection == 3) maze[robotX][robotY].wallDown = true;
+        switch (robotDirection) {
+            case 0: maze[robotX][robotY].wallLeft = true; break;   // Facing Up
+            case 1: maze[robotX][robotY].wallUp = true; break;     // Facing Right
+            case 2: maze[robotX][robotY].wallRight = true; break;  // Facing Down
+            case 3: maze[robotX][robotY].wallDown = true; break;   // Facing Left
+        }
     }
+
+    // Mark this cell as visited
+    maze[robotX][robotY].visited = true;
 }
 
-// Function to move the robot based on the direction it is facing
 void moveRobot(int direction) {
-    if (direction == 0) {
+    // Check if there's no wall in front (based on the current direction)
+    if (!maze[robotX][robotY].hasWall(direction)) {
+        // Call the API to move the robot forward
         API::moveForward();
-        robotY -= 1;  // Move Up
-    } else if (direction == 1) {
-        API::moveForward();
-        robotX += 1;  // Move Right
-    } else if (direction == 2) {
-        API::moveForward();
-        robotY += 1;  // Move Down
-    } else if (direction == 3) {
-        API::moveForward();
-        robotX -= 1;  // Move Left
+        
+        // Update the robot's position based on the direction it is facing
+        robotX += dx[direction];
+        robotY += dy[direction];
+
+        // Log the robot's new position
+        log("Robot moved to (" + to_string(robotX) + ", " + to_string(robotY) + ")");
+        
+        // Update the maze with new sensor data after moving
+        exploreMaze();
     }
-    log("Robot moved to (" + to_string(robotX) + ", " + to_string(robotY) + ")");
+    else {
+        log("Cannot move, wall detected!");
+    }
 }
 
-// Function to turn the robot to a specific direction
 void turnRobot(int newDirection) {
-    while (robotDirection != newDirection) {
-        API::turnRight();
-        robotDirection = (robotDirection + 1) % 4;
+    // Calculate the difference in direction (normalize it to a value between 0 and 3)
+    int diff = (newDirection - robotDirection + 4) % 4;  // This ensures a positive difference
+    
+    // Turn logic based on the calculated difference (diff)
+    if (diff == 1) {  // Turn right once (90 degrees clockwise)
+        API::turnRight();   // Turn the robot 90 degrees to the right
+        robotDirection = (robotDirection + 1) % 4;  // Update the robot's direction
     }
+    else if (diff == 2) {  // Turn around (180 degrees)
+        API::turnRight();   // First 90 degrees clockwise
+        API::turnRight();   // Another 90 degrees to complete the 180 degree turn
+        robotDirection = (robotDirection + 2) % 4;  // Update the robot's direction to reflect the turn
+    }
+    else if (diff == 3) {  // Turn left once (90 degrees counterclockwise)
+        log("Turning left");
+        API::turnLeft();    // Turn the robot 90 degrees to the left
+        robotDirection = (robotDirection + 3) % 4;  // Update the robot's direction
+    }
+
+    // Log the new direction after the turn
     log("Robot turned to direction " + to_string(robotDirection));
 }
 
-// A* Search Incrementally: Updates the path while moving
-void aStarSearchIncremental(int startX, int startY, int goalX, int goalY) {
-    vector<vector<bool>> openList(MAZE_SIZE, vector<bool>(MAZE_SIZE, false));  // Open list
-    vector<vector<int>> gCost(MAZE_SIZE, vector<int>(MAZE_SIZE, INF));    // Cost to reach each cell
-    vector<vector<Cell*>> parent(MAZE_SIZE, vector<Cell*>(MAZE_SIZE, nullptr));  // Parent cell pointers
-
-    // Initialize start position
-    gCost[startX][startY] = 0;
-    openList[startX][startY] = true;
-
-    // Priority Queue: open list sorted by fCost
-    list<Cell*> openSet;
-    openSet.push_back(&maze[startX][startY]);
-
-    while (!openSet.empty()) {
-        Cell* current = openSet.front();
-        openSet.pop_front();
-
-        // Check if goal is reached
-        if (current->x == goalX && current->y == goalY) {
-            vector<pair<int, int>> path;
-            Cell* temp = current;
-            while (temp != nullptr) {
-                path.push_back({temp->x, temp->y});
-                temp = temp->parent;
-            }
-
-            // Manually reverse the path
-            vector<pair<int, int>> reversedPath;
-            for (int i = path.size() - 1; i >= 0; --i) {
-                reversedPath.push_back(path[i]);
-            }
-
-            // Move robot along the path
-            for (auto& p : reversedPath) {
-                int targetX = p.first;
-                int targetY = p.second;
-                int direction = -1;
-
-                // Determine direction to move
-                if (targetX == robotX && targetY == robotY - 1) direction = 0;  // Up
-                else if (targetX == robotX + 1 && targetY == robotY) direction = 1;  // Right
-                else if (targetX == robotX && targetY == robotY + 1) direction = 2;  // Down
-                else if (targetX == robotX - 1 && targetY == robotY) direction = 3;  // Left
-
-                if (direction != -1) {
-                    turnRobot(direction);
-                    moveRobot(direction);
-                    exploreMaze();  // Update maze with sensor data after moving
-                }
-            }
-            return;
-        }
-
-        // Explore neighbors
-        for (int dir = 0; dir < 4; ++dir) {
-            int neighborX = current->x + dx[dir];
-            int neighborY = current->y + dy[dir];
-
-            if (neighborX >= 0 && neighborX < MAZE_SIZE && neighborY >= 0 && neighborY < MAZE_SIZE && !current->hasWall(dir)) {
-                int newGCost = gCost[current->x][current->y] + 1;
-                if (newGCost < gCost[neighborX][neighborY]) {
-                    gCost[neighborX][neighborY] = newGCost;
-                    openList[neighborX][neighborY] = true;
-                    parent[neighborX][neighborY] = current;
-
-                    int hCost = abs(neighborX - goalX) + abs(neighborY - goalY);
-                    int fCost = newGCost + hCost;
-
-                    Cell* neighborCell = &maze[neighborX][neighborY];
-                    openSet.push_back(neighborCell);
-                }
-            }
-        }
-    }
-}
-
-// Function to explore and move towards the goal incrementally
-void exploreAndMoveToGoal(int goalX, int goalY) {
-    while (robotX != goalX || robotY != goalY) {
-        exploreMaze();  // Update maze with current sensor data
-        aStarSearchIncremental(robotX, robotY, goalX, goalY);  // Perform incremental A* search
-    }
-}
 
 int main() {
-    // Define some goals
-    vector<pair<int, int>> goals = {{7, 7}, {7, 8}, {8, 7}, {8, 8}};
-
-    // Move towards the first goal
-    exploreAndMoveToGoal(goals[0].first, goals[0].second);
-
-    return 0;
+    turnRobot(3);
+    moveRobot(1);
 }
+
