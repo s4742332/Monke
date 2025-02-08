@@ -195,13 +195,13 @@ void DFS(vector<pair<int, int>>& goals) {
         }
     }
 }
-void aStarSearch(int goalX, int goalY){
-}
 int main() {
-    // Set goals (in this case, we place 4 goals in the maze)
-    vector<pair<int, int>> goals = {{7, 7}, {7, 8}, {8, 7}, {8, 8}};
-    // Call DFS to explore and search for the goals
-    DFS(goals);
-
-    return 0;
+    API::turnRight();
 }
+
+// Set goals (in this case, we place 4 goals in the maze)
+    //vector<pair<int, int>> goals = {{7, 7}, {7, 8}, {8, 7}, {8, 8}};
+    // Call DFS to explore and search for the goals
+    //DFS(goals);
+
+    //return 0;
