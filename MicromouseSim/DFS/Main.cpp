@@ -196,12 +196,10 @@ void DFS(vector<pair<int, int>>& goals) {
     }
 }
 int main() {
-    API::turnRight();
-}
-
-// Set goals (in this case, we place 4 goals in the maze)
-    //vector<pair<int, int>> goals = {{7, 7}, {7, 8}, {8, 7}, {8, 8}};
+    // Set goals (in this case, we place 4 goals in the maze)
+    vector<pair<int, int>> goals = {{7, 7}, {7, 8}, {8, 7}, {8, 8}};
     // Call DFS to explore and search for the goals
-    //DFS(goals);
+    DFS(goals);
 
-    //return 0;
+    return 0;
+}
