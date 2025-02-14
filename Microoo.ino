@@ -1,6 +1,6 @@
 //Ultrasonic Set-up
   int trig[3] = {5, 6, 7}; // L, F, R \ pins
-  int echo[3] = {16, 14, 15};
+  int echo[3] = {14, 15, 16};
   float lights[3] = {2, 3, 4}; //Pins for Wall Indicator lights, L, F, R, need to test if pinmode ouput works
 
 //Motor Set-Up
@@ -219,10 +219,54 @@ void rotate(int direction) {
   }
 }
 
+void test_movement(){
+  Serial.println("MOVE FORWARD");
 
+  analogWrite(LeftSpeed, 100);  //Controlling speed (0  = off and 255 = max speed):    
+  analogWrite(RightSpeed, 100);  //Copy and paste to other areas to control speeds for turning
+
+  digitalWrite(LeftINA, HIGH); //Write to move forward, swap the high lows to change direction of spin
+  digitalWrite(LeftINB, LOW);
+  digitalWrite(RightINC, HIGH);
+  digitalWrite(RightIND, LOW);
+  delay(120);
+
+  //Turns it off
+  digitalWrite(LeftINA, LOW);
+  digitalWrite(LeftINB, LOW);
+  digitalWrite(RightINC, LOW);
+  digitalWrite(RightIND, LOW);
+
+  Serial.println("MOVE LEFT");
+  digitalWrite(LeftINA, LOW); //swap the high lows to change direction of spin
+  digitalWrite(LeftINB, LOW);
+  digitalWrite(RightINC, HIGH);
+  digitalWrite(RightIND, LOW);
+  delay(120);
+
+  //Turns it off
+  digitalWrite(LeftINA, LOW);
+  digitalWrite(LeftINB, LOW);
+  digitalWrite(RightINC, LOW);
+  digitalWrite(RightIND, LOW);
+
+  Serial.println("MOVE RIGHT");
+  digitalWrite(LeftINA, HIGH); //swap the high lows to change direction of spin
+  digitalWrite(LeftINB, LOW);
+  digitalWrite(RightINC, LOW);
+  digitalWrite(RightIND, LOW);
+  delay(120);
+
+  //Turns it off
+  digitalWrite(LeftINA, LOW);
+  digitalWrite(LeftINB, LOW);
+  digitalWrite(RightINC, LOW);
+  digitalWrite(RightIND, LOW);
+
+}
 
 
 void loop() {
   // put your main code here, to run repeatedly:
-
+  test_movement(); //runs the test movement function
 }
