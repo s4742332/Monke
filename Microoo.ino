@@ -93,24 +93,22 @@ int center() {
   int R = 1;
 
   if (abs(dist_lwall - dist_rwall) < 0.5) { // Minimal Difference between the walls means we are centered
-    speed[0] = speed[1] = 100;
-    return speed;}// Standard Speed
+    speed[0] = speed[1] = 100;}// Standard Speed
   else if ((dist_lwall - dist_rwall) < -3.8 ) {//Closest to the Left Wall, Maximum Difference (this means that the wall might be further away than average)
     //left motor much faster than right motor
-    speed[L] += 10;
-    return speed;} 
+    speed[L] += 10;} 
   else if ( -3.8 < (dist_lwall - dist_rwall) < -0.5 ) { //Closest to the Left Wall, Average Difference (this means that the walls are average)
     //left motor just  faster than right motor
-    speed[L] += 5;
-    return speed;}
+    speed[L] += 5;}
   else if ((dist_lwall - dist_rwall) > 3.8 ) {//Closest to the Right Wall, Maximum Difference (this means that the wall might be further away than average)
     //right motor much faster than left motor
-    speed[R] += 10;
-    return speed;}
+    speed[R] += 10;}
   else if ( 0.5 < (dist_lwall - dist_rwall) < 3.8 ) { //Closest to the Right Wall, Average Difference (this means that the walls are average)
     //right motor just  faster than left motor
     speed[R] += 5;
-    return speed;}
+    }
+
+    return speed[L], speed[R];
 }
 
 void update_position(int movement) { // L, F, R == 0 , 1 , 2
@@ -222,48 +220,47 @@ void rotate(int direction) {
 void test_movement(){
   Serial.println("MOVE FORWARD");
 
-  analogWrite(LeftSpeed, 100);  //Controlling speed (0  = off and 255 = max speed):    
-  analogWrite(RightSpeed, 100);  //Copy and paste to other areas to control speeds for turning
+  analogWrite(LeftSpeed, 255);  //Controlling speed (0  = off and 255 = max speed):    
+  analogWrite(RightSpeed, 255);  //Copy and paste to other areas to control speeds for turning
 
-  digitalWrite(LeftINA, HIGH); //Write to move forward, swap the high lows to change direction of spin
-  digitalWrite(LeftINB, LOW);
+  digitalWrite(LeftINA,  LOW);
+  digitalWrite(LeftINB, HIGH);
+
   digitalWrite(RightINC, HIGH);
   digitalWrite(RightIND, LOW);
-  delay(120);
 
-  //Turns it off
-  digitalWrite(LeftINA, LOW);
+  
+  delay(5);
+
+  digitalWrite(LeftINA,  LOW);
   digitalWrite(LeftINB, LOW);
+
   digitalWrite(RightINC, LOW);
   digitalWrite(RightIND, LOW);
-
+  
   Serial.println("MOVE LEFT");
-  digitalWrite(LeftINA, LOW); //swap the high lows to change direction of spin
-  digitalWrite(LeftINB, LOW);
+
+  //digitalWrite(LeftINA,  LOW);
+  //digitalWrite(LeftINB, HIGH);
+
   digitalWrite(RightINC, HIGH);
   digitalWrite(RightIND, LOW);
-  delay(120);
-
-  //Turns it off
-  digitalWrite(LeftINA, LOW);
-  digitalWrite(LeftINB, LOW);
-  digitalWrite(RightINC, LOW);
-  digitalWrite(RightIND, LOW);
+  delay(5);
 
   Serial.println("MOVE RIGHT");
-  digitalWrite(LeftINA, HIGH); //swap the high lows to change direction of spin
-  digitalWrite(LeftINB, LOW);
-  digitalWrite(RightINC, LOW);
-  digitalWrite(RightIND, LOW);
-  delay(120);
 
-  //Turns it off
-  digitalWrite(LeftINA, LOW);
-  digitalWrite(LeftINB, LOW);
-  digitalWrite(RightINC, LOW);
-  digitalWrite(RightIND, LOW);
+  digitalWrite(LeftINA,  LOW);
+  digitalWrite(LeftINB, HIGH);
 
-}
+  //digitalWrite(RightINC, HIGH);
+  //digitalWrite(RightIND, LOW);
+  delay(5);
+  
+  
+  }
+  
+
+
 
 
 void loop() {
